@@ -4,7 +4,7 @@ const now=()=>new Date().toISOString();
 const enc=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');
 const random=n=>{const b=new Uint8Array(n);crypto.getRandomValues(b);return enc(b)};
 const digest=async s=>enc(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)));
-async function passwordHash(password,salt,pepper){const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);const derived=await crypto.subtle.deriveBits({name:'PBKDF2',salt:new TextEncoder().encode(salt),iterations:10000,hash:'SHA-256'},key,256);const secret=await crypto.subtle.importKey('raw',new TextEncoder().encode(pepper),'HMAC',{hash:'SHA-256'},false,['sign']);return enc(await crypto.subtle.sign('HMAC',secret,derived))}
+async function passwordHash(password,salt,pepper){const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);const derived=await crypto.subtle.deriveBits({name:'PBKDF2',salt:new TextEncoder().encode(salt),iterations:10000,hash:'SHA-256'},key,256);const secret=await crypto.subtle.importKey('raw',new TextEncoder().encode(pepper),{name:'HMAC',hash:'SHA-256'},false,['sign']);return enc(await crypto.subtle.sign('HMAC',secret,derived))}
 const cookie=(token,maxAge)=>"arcamis_session="+token+"; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age="+maxAge;
 function body(req){return req.json().catch(()=>({}))}
 function requireOrigin(req){const origin=req.headers.get('Origin');return !origin||origin===new URL(req.url).origin}
