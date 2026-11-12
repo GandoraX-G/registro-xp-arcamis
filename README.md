@@ -13,7 +13,7 @@ Registro web per la campagna Arcamis: Cloudflare Pages + Pages Functions + D1. L
 
 ## Preparazione Cloudflare
 
-1. Crea un repository GitHub **privato** e carica solo i file di `outputs/arcamis-web/`. Non inserire mai `arcamis-import.json`, password, token o file con dati reali nel repository.
+1. Il codice è già nel repository GitHub indicato. Il repository al momento è pubblico: il codice non include i dati del registro né segreti, ma chiunque può leggerlo. Se vuoi mantenere privato anche il codice, cambia la visibilità del repository dalle impostazioni GitHub. Non inserire mai `arcamis-import.json`, password, token o file con dati reali nel repository.
 2. Crea un database D1 chiamato `arcamis-register` e copia il suo ID in `wrangler.jsonc` al posto di `REPLACE_WITH_D1_DATABASE_ID`.
 3. Dalla cartella del progetto, applica la migrazione: `npx wrangler d1 migrations apply arcamis-register --remote`.
 4. Collega il repository privato a Cloudflare Pages. Imposta la cartella radice `.` e la directory di build `public`; non serve un comando di build.
