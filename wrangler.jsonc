@@ -7,9 +7,10 @@
     {
       "binding": "DB",
       "database_name": "arcamis-register",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_id": "f8ac45cd-6635-409c-b529-dc1a12d5c8b2",
       "migrations_dir": "migrations"
     }
   ]
 }
+
 
