@@ -1,38 +1,36 @@
-# Arcamis Web
+# Registro XP Arcamis
 
-**Sito online:** https://arcamis-register.pages.dev  
-**Cloudflare Pages project:** `arcamis-register`  
-**Database:** Cloudflare D1, regione UE
+Registro web privato della campagna, pubblicato su Cloudflare Pages e salvato in Cloudflare D1.
 
-## Distribuzione attiva
+**Sito:** https://arcamis-register.pages.dev  
+**Progetto Pages:** `arcamis-register`  
+**Repository:** `GandoraX-G/registro-xp-arcamis`
 
-Il progetto è collegato al branch `main` del repository `GandoraX-G/registro-xp-arcamis`. I nuovi commit avviano automaticamente un deploy. Le anteprime per branch sono disattivate e la produzione usa la directory `public/`.
+## Ruoli
 
-La tabella D1 è stata inizializzata; il binding `DB` e il secret cifrato `BOOTSTRAP_SECRET` sono configurati su Cloudflare. Non aggiungere segreti o dati del registro a GitHub.
+- **Amministratore:** accesso completo; crea account, modifica i ruoli, importa/esporta dati, gestisce collegamenti Google Fogli e ripristina i PG archiviati.
+- **Editor:** consulta tutto e può aggiungere o modificare PG, registrare/correggere XP, scrivere il diario delle avventure e archiviare personaggi.
+- **Visualizzatore:** consulta tutti i PG, l’intero registro, le schede e i diari senza poter cambiare dati.
 
-## Primo accesso
+La registrazione è disattivata. Solo un amministratore può creare credenziali, disattivarle, riattivarle, reimpostare password o cambiare ruolo. Tutti gli account attivi vedono lo stesso archivio completo.
 
-1. Apri il sito online. La prima schermata richiede il codice monouso fornito separatamente al proprietario.
-2. Scegli username e password dell’amministratore sul sito. Non comunicarli in chat e non salvarli nel repository.
-3. Accedi come admin e importa `arcamis-import.json`, fornito separatamente e non incluso in questo repository.
-4. Dall’area Amministrazione crea le credenziali degli altri membri. Non esiste registrazione pubblica.
-5. Aggiungi il link Google Fogli alla scheda del rispettivo PG: il campo è modificabile solo dall’admin.
+## Strumenti disponibili
 
-Conserva `arcamis-import.json` e il codice monouso fuori da GitHub. Il primo file contiene il registro della campagna; il secondo permette di inizializzare l’admin finché il database non ha utenti.
+- Panoramica con statistiche, classifica XP, andamento mensile, compleanni vicini e promemoria per traguardi XP.
+- Schede PG con classe, stirpe, livello, origine, allineamento, stato, compleanno, immagine, note e dettagli.
+- Collegamento Google Fogli modificabile solo da un amministratore.
+- Ricerca, filtri e ordinamento di PG e sessioni.
+- Pagina di dettaglio per ogni sessione, partecipanti, XP e diario con luogo e riassunto.
+- Modifica e rimozione delle singole voci XP con attribuzione nell’audit log.
+- Importazione iniziale JSON, aggiunta sessioni da CSV, backup completo JSON ed esportazione CSV leggibile da Excel e Google Fogli.
+- Archivio dei PG ritirati: la cronologia rimane conservata e l’amministratore può ripristinarli.
+- Interfaccia adattabile a telefono e computer.
 
-## Ruoli e dati
+## Database e distribuzione
 
-- **Admin:** gestisce account, avventurieri, link ai fogli e voci XP; può importare ed esportare backup JSON.
-- **Membro:** consulta avventurieri, sessioni e schede.
-- Archiviare un PG lo nasconde dall’elenco attivo ma conserva la cronologia XP.
-- Le password sono memorizzate con PBKDF2 e salt individuale; la sessione usa cookie HttpOnly, Secure e SameSite=Strict.
+Il branch `main` è collegato a Cloudflare Pages e pubblica automaticamente le modifiche. I dati di campagna e i segreti restano fuori da GitHub.
 
-## Struttura
+La migrazione `migrations/0002_roles_rich_records.sql` amplia i ruoli, i dettagli dei PG e i diari/audit. È stata applicata al database D1 online. Prima di applicarla su una copia nuova, applicare prima `0001_initial.sql`.
 
-- `public/`: interfaccia web e intestazioni di sicurezza.
-- `functions/api/`: API di autenticazione e gestione dati.
-- `migrations/`: schema Cloudflare D1.
-- `wrangler.jsonc`: configurazione Pages e binding D1.
-
-Il repository GitHub è pubblico: contiene il codice dell’app, non i dati della campagna né il codice monouso admin.
+Il progetto usa il binding D1 `DB` e il secret `BOOTSTRAP_SECRET`. Mantieni i valori dei segreti solo nelle impostazioni Cloudflare, mai nel codice o nel repository.
 
