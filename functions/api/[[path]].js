@@ -4,14 +4,14 @@ const now=()=>new Date().toISOString();
 const enc=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');
 const random=n=>{const b=new Uint8Array(n);crypto.getRandomValues(b);return enc(b)};
 const digest=async s=>enc(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)));
-async function passwordHash(password,salt){const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);return enc(await crypto.subtle.deriveBits({name:'PBKDF2',salt:new TextEncoder().encode(salt),iterations:180000,hash:'SHA-256'},key,256))}
+async function passwordHash(password,salt){const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);return enc(await crypto.subtle.deriveBits({name:'PBKDF2',salt:new TextEncoder().encode(salt),iterations:10000,hash:'SHA-256'},key,256))}
 const cookie=(token,maxAge)=>"arcamis_session="+token+"; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age="+maxAge;
 function body(req){return req.json().catch(()=>({}))}
 function requireOrigin(req){const origin=req.headers.get('Origin');return !origin||origin===new URL(req.url).origin}
 function admin(u){return u?.role==='admin'}
 async function current(req,env){const token=(req.headers.get('Cookie')||'').match(/(?:^|;\s*)arcamis_session=([^;]+)/)?.[1];if(!token)return null;const h=await digest(token);return await env.DB.prepare('SELECT u.id,u.username,u.role FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires_at>? AND u.active=1').bind(h,now()).first()}
 function id(){return crypto.randomUUID()}
-export async function onRequest({request,env}){
+async function routeRequest({request,env}){
  const path=new URL(request.url).pathname.replace(/^\/api\/?/,'').replace(/\/$/,''); const method=request.method;
  if(!requireOrigin(request))return fail('Richiesta non valida.',403);
  if(path==='setup'&&method==='POST'){const d=await body(request);const count=await env.DB.prepare('SELECT COUNT(*) n FROM users').first();if(count.n)return fail('Configurazione già completata.',409);if(!env.BOOTSTRAP_SECRET||String(d.secret||'').trim()!==String(env.BOOTSTRAP_SECRET||'').trim())return fail('Codice di configurazione non valido.',403);const username=String(d.username||'').trim(),password=String(d.password||'');if(username.length<3||username.length>50||password.length<12)return fail('Nome utente minimo 3 caratteri; password minimo 12.',400);const salt=random(16),hash=await passwordHash(password,salt);await env.DB.prepare('INSERT INTO users(id,username,password_hash,password_salt,role,created_at) VALUES(?,?,?,?,?,?)').bind(id(),username,hash,salt,'admin',now()).run();await env.DB.prepare("INSERT OR REPLACE INTO settings(key,value) VALUES('setup_complete','1')").run();return json({ok:true},201)}
@@ -32,3 +32,10 @@ export async function onRequest({request,env}){
  return fail('Risorsa non trovata.',404)
 }
 function safeSheet(v){if(!v)return '';try{const u=new URL(v);return u.hostname==='docs.google.com'&&u.pathname.startsWith('/spreadsheets/')?u.toString():''}catch{return ''}}
+
+export async function onRequest(context){
+ try{return await routeRequest(context)}catch(error){
+  console.error('Arcamis API error',{path:new URL(context.request.url).pathname,method:context.request.method,name:error?.name,message:error?.message});
+  return fail('Errore interno del servizio. Riprova tra poco.',500)
+ }
+}
