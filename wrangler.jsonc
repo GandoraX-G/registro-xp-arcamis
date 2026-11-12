@@ -3,13 +3,6 @@
   "name": "arcamis-register",
   "compatibility_date": "2026-11-12",
   "pages_build_output_dir": "./public",
-  "observability": {
-    "enabled": true,
-    "logs": {
-      "invocation_logs": true,
-      "head_sampling_rate": 1
-    }
-  },
   "d1_databases": [
     {
       "binding": "DB",
@@ -19,4 +12,5 @@
     }
   ]
 }
+
 
