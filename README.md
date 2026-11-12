@@ -1,36 +1,38 @@
 # Arcamis Web
 
-Registro web per la campagna Arcamis: Cloudflare Pages + Pages Functions + D1. La cartella `public/` contiene l'interfaccia; `functions/api/` contiene le API. Gli account non sono auto-registrabili.
+**Sito online:** https://arcamis-register.pages.dev  
+**Cloudflare Pages project:** `arcamis-register`  
+**Database:** Cloudflare D1, regione UE
 
-## Sicurezza e ruoli
+## Distribuzione attiva
 
-- La prima schermata crea un solo admin usando un segreto impostato fuori dal repository.
-- L'admin crea gli account e sceglie tra `Membro` (sola consultazione) e `Amministratore`.
-- Le password sono memorizzate con PBKDF2 e salt individuale; la sessione usa un cookie HttpOnly, Secure e SameSite=Strict.
-- Gli accessi sono limitati dopo tentativi falliti; le API di scrittura controllano ruolo e origine.
-- Archiviare un PG lo nasconde dalle schede attive senza cancellarne le voci XP.
-- Il link Google Fogli è modificabile solo dagli admin.
+Il progetto è collegato al branch `main` del repository `GandoraX-G/registro-xp-arcamis`. I nuovi commit avviano automaticamente un deploy. Le anteprime per branch sono disattivate e la produzione usa la directory `public/`.
 
-## Preparazione Cloudflare
+La tabella D1 è stata inizializzata; il binding `DB` e il secret cifrato `BOOTSTRAP_SECRET` sono configurati su Cloudflare. Non aggiungere segreti o dati del registro a GitHub.
 
-1. Il codice è già nel repository GitHub indicato. Il repository al momento è pubblico: il codice non include i dati del registro né segreti, ma chiunque può leggerlo. Se vuoi mantenere privato anche il codice, cambia la visibilità del repository dalle impostazioni GitHub. Non inserire mai `arcamis-import.json`, password, token o file con dati reali nel repository.
-2. Crea un database D1 chiamato `arcamis-register` e copia il suo ID in `wrangler.jsonc` al posto di `REPLACE_WITH_D1_DATABASE_ID`.
-3. Dalla cartella del progetto, applica la migrazione: `npx wrangler d1 migrations apply arcamis-register --remote`.
-4. Collega il repository privato a Cloudflare Pages. Imposta la cartella radice `.` e la directory di build `public`; non serve un comando di build.
-5. In Cloudflare Pages > Settings > Variables and Secrets, aggiungi il secret `BOOTSTRAP_SECRET`, usando una password casuale lunga e non riutilizzata. In Settings > Bindings collega il database D1 al nome `DB`, poi fai un nuovo deploy.
-6. Apri il sito: la prima visita mostrerà la creazione admin; usa il `BOOTSTRAP_SECRET` come codice e scegli username e password admin. La configurazione diventa inattiva appena esiste il primo account.
-7. Accedi come admin e importa il file privato `arcamis-import.json` dalla sezione Amministrazione. L'import funziona solo su un database ancora vuoto.
-8. Dalla scheda di ogni PG, l'admin può aggiungere il link Google Fogli. Puoi poi creare gli account degli altri utenti dalla sezione Amministrazione.
+## Primo accesso
 
-## Dati
+1. Apri il sito online. La prima schermata richiede il codice monouso fornito separatamente al proprietario.
+2. Scegli username e password dell’amministratore sul sito. Non comunicarli in chat e non salvarli nel repository.
+3. Accedi come admin e importa `arcamis-import.json`, fornito separatamente e non incluso in questo repository.
+4. Dall’area Amministrazione crea le credenziali degli altri membri. Non esiste registrazione pubblica.
+5. Aggiungi il link Google Fogli alla scheda del rispettivo PG: il campo è modificabile solo dall’admin.
 
-Il file `../arcamis-import.json` contiene l'esportazione dal foglio originale e va trattato come dato privato. Non viene servito dal sito e non va committato. Dal pannello admin si può scaricare un backup JSON.
+Conserva `arcamis-import.json` e il codice monouso fuori da GitHub. Il primo file contiene il registro della campagna; il secondo permette di inizializzare l’admin finché il database non ha utenti.
 
-## Configurazione richiesta prima del deploy
+## Ruoli e dati
 
-- Sostituire l'ID D1 in `wrangler.jsonc`.
-- Collegare il repository GitHub all'account Cloudflare Pages.
-- Impostare il secret bootstrap direttamente nel pannello Cloudflare.
+- **Admin:** gestisce account, avventurieri, link ai fogli e voci XP; può importare ed esportare backup JSON.
+- **Membro:** consulta avventurieri, sessioni e schede.
+- Archiviare un PG lo nasconde dall’elenco attivo ma conserva la cronologia XP.
+- Le password sono memorizzate con PBKDF2 e salt individuale; la sessione usa cookie HttpOnly, Secure e SameSite=Strict.
 
-Questa prima versione non implementa recupero password via email; un admin può disattivare l'account e ricrearlo con una nuova password.
+## Struttura
+
+- `public/`: interfaccia web e intestazioni di sicurezza.
+- `functions/api/`: API di autenticazione e gestione dati.
+- `migrations/`: schema Cloudflare D1.
+- `wrangler.jsonc`: configurazione Pages e binding D1.
+
+Il repository GitHub è pubblico: contiene il codice dell’app, non i dati della campagna né il codice monouso admin.
 
