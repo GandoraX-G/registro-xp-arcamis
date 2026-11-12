@@ -25,12 +25,17 @@ La registrazione è disattivata. Solo un amministratore può creare credenziali,
 - Importazione iniziale JSON, aggiunta sessioni da CSV, backup completo JSON ed esportazione CSV leggibile da Excel e Google Fogli.
 - Archivio dei PG ritirati: la cronologia rimane conservata e l’amministratore può ripristinarli.
 - Interfaccia adattabile a telefono e computer.
+- Registrazione di una sessione intera con partecipanti, XP individuali, luogo e riassunto in un solo passaggio.
+- Cestino delle voci XP con recupero per editor e amministratore; solo l’amministratore può eliminare definitivamente.
+- Ripristino guidato del backup JSON, in modalità unione: aggiorna i record corrispondenti e conserva i dati aggiunti dopo il backup.
+- Filtri delle sessioni salvabili nel browser, controlli qualità e ultimo accesso degli account.
+- Cambio password personale e promemoria configurabili per soglie XP e compleanni.
 
 ## Database e distribuzione
 
 Il branch `main` è collegato a Cloudflare Pages e pubblica automaticamente le modifiche. I dati di campagna e i segreti restano fuori da GitHub.
 
-La migrazione `migrations/0002_roles_rich_records.sql` amplia i ruoli, i dettagli dei PG e i diari/audit. È stata applicata al database D1 online. Prima di applicarla su una copia nuova, applicare prima `0001_initial.sql`.
+Le migrazioni `0002_roles_rich_records.sql` e `0003_polish_and_recovery.sql` ampliano i ruoli, i dettagli dei PG, i diari, l’audit e il cestino. Sono state applicate al database D1 online. Su una copia nuova, applicare i file `0001`, `0002` e `0003` nell’ordine indicato.
 
 Il progetto usa il binding D1 `DB` e il secret `BOOTSTRAP_SECRET`. Mantieni i valori dei segreti solo nelle impostazioni Cloudflare, mai nel codice o nel repository.
 
