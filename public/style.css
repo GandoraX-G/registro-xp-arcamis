@@ -19,4 +19,5 @@ html{min-height:100%;background:#0b1020}body{min-height:100svh;padding-bottom:ca
 }
 @media(max-width:390px){.main{padding-left:11px;padding-right:11px}.top h1{font-size:24px}.top-actions button{font-size:11px;padding:6px}.navlabel{font-size:9px}.cal-cell{min-height:58px}.cal-event{font-size:8px}.cards .card label{font-size:10px}}
 @media(orientation:landscape) and (max-height:500px){.side{position:sticky;top:0;inset:auto;padding-bottom:0}.brand{display:flex}.nav{overflow-x:auto}.main{padding-top:12px}.modal{align-items:center;padding:12px}.dialog{width:min(700px,100%);border-radius:15px}}
+@media(max-width:760px){.top-actions{width:100%;flex-wrap:wrap;overflow:visible}.top-actions button{flex:1 1 calc(33.333% - 6px);white-space:nowrap}.top-actions #changePassword{display:inline-flex}}
 
