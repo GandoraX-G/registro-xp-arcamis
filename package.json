@@ -3,10 +3,11 @@
   "private": true,
   "scripts": {
     "dev": "wrangler pages dev public",
-    "deploy": "wrangler pages deploy public"
+    "deploy": "wrangler pages deploy public",
+    "check": "node --check public/app.js && node --check public/enhanced.js && node --check public/sw.js && node --check 'functions/api/[[path]].js' && node --check scripts/smoke.mjs && node --check scripts/legacy-check.mjs",
+    "test": "node scripts/smoke.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"
   }
 }
-
