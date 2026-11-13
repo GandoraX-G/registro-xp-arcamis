@@ -8,26 +8,26 @@ Registro web privato della campagna, pubblicato su Cloudflare Pages e salvato in
 
 ## Ruoli
 
-- **Amministratore:** accesso completo; crea account, modifica i ruoli, importa/esporta dati, gestisce collegamenti Google Fogli, backup e ripristino, ripristina i PG archiviati.
-- **Editor:** consulta tutto e può aggiungere o modificare PG, registrare/correggere XP, scrivere il diario, gestire calendario, presenze, ispirazioni e oggetti, archiviare personaggi.
+- **Amministratore:** accesso completo; crea account, modifica i ruoli, elimina le credenziali di editor e visualizzatori, importa/esporta dati, gestisce collegamenti Google Fogli, backup e ripristino, ripristina i PG archiviati. L’account `arcamis-admin` è protetto: per eliminarlo, declassarlo o disattivarlo serve il secret `ADMIN_DELETE_SECRET`.
+- **Editor:** consulta tutto e può aggiungere o modificare PG, registrare/correggere/togliere XP (anche con voci negative), eliminare sessioni, scrivere il diario, gestire calendario, ispirazioni e oggetti, archiviare personaggi.
 - **Visualizzatore:** consulta tutti i PG, il registro, le schede, i diari, il calendario e le presenze senza poter cambiare dati.
 
 La registrazione è disattivata. Solo un amministratore può creare credenziali, disattivarle, riattivarle, reimpostare password o cambiare ruolo. Tutti gli account attivi vedono lo stesso archivio completo.
 
 ## Strumenti disponibili
 
-- Panoramica con statistiche, classifica XP, andamento mensile, presenze dell’ultima sessione, compleanni vicini e promemoria per traguardi XP.
-- Schede PG con classe, stirpe, livello, origine, allineamento, stato, compleanno, ritratto, note e dettagli.
+- Panoramica con statistiche, classifica XP, andamento mensile, prossimi appuntamenti, compleanni vicini e promemoria per il livello successivo.
+- Schede PG con classe, stirpe, livello calcolato dagli XP sulla scala D&D 5e, XP mancanti al livello successivo, origine, allineamento, stato (Attivo/Inattivo), compleanno, ritratto, note e dettagli.
 - Collegamento Google Fogli modificabile solo da un amministratore.
 - Ricerca, filtri e ordinamento di PG e sessioni, con filtri salvabili nel browser.
 - Calendario delle sessioni programmate con disponibilità dei partecipanti.
-- Presenze per avventuriero, tasso di partecipazione e registrazione delle assenze.
 - Ispirazione eroica e oggetti ottenuti per ogni PG.
+- Livelli automatici: 20 soglie D&D 5e (0 → 355.000 XP), con XP mancanti al livello successivo nella scheda e nel promemoria.
 - Pagina di dettaglio per ogni sessione, partecipanti, XP e diario con luogo e riassunto.
-- Modifica e rimozione delle singole voci XP con attribuzione nell’audit log.
+- Modifica, rimozione e storno delle singole voci XP, con il vincolo che il totale di un PG non scenda mai sotto 0 XP; eliminazione di un’intera sessione con recupero di voci XP e diario dal cestino; tutto attribuito nell’audit log.
 - Importazione iniziale JSON, aggiunta sessioni da CSV, backup completo JSON ed esportazione CSV.
 - Archivio dei PG ritirati con ripristino riservato all’amministratore.
-- Cestino delle voci XP con recupero per editor e amministratore.
+- Cestino di voci XP e diari di sessione con recupero per editor e amministratore.
 - Ripristino guidato del backup JSON in modalità unione.
 - Cambio password personale e promemoria configurabili.
 - Interfaccia adattabile a telefono e computer, installabile come PWA.
@@ -42,6 +42,7 @@ Il progetto usa il binding D1 `DB`. Segreti previsti:
 | --- | --- |
 | `BOOTSTRAP_SECRET` | Codice di configurazione iniziale; resta come pepper di riserva per gli hash già esistenti. |
 | `PASSWORD_PEPPER` | Pepper dedicato per gli hash delle password. Consigliato: separa il pepper dal codice di setup. Se impostato, gli hash esistenti vengono riscritti automaticamente al primo login riuscito. |
+| `ADMIN_DELETE_SECRET` | Password di servizio richiesta per eliminare, declassare o disattivare l’account protetto `arcamis-admin`. Senza questo secret quelle operazioni vengono rifiutate. |
 
 Non ruotare `PASSWORD_PEPPER` senza reimpostare le password: gli hash precedenti non sarebbero più verificabili.
 
@@ -59,6 +60,7 @@ npx wrangler d1 migrations apply arcamis-register --remote  # database online
 - `0003_polish_and_recovery.sql`: ultimo accesso e cestino XP.
 - `0004_calendar_attendance_rewards.sql`: sessioni programmate, presenze, ispirazioni, oggetti.
 - `0005_performance_indexes.sql`: indici per pulizia sessioni, rate limit e audit.
+- `0006_diary_trash_and_drop_attendance.sql`: cestino dei diari di sessione e rimozione della marcatura presenze (le disponibilità del calendario restano).
 
 ### Hash delle password
 

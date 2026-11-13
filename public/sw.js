@@ -1,4 +1,4 @@
-const VERSION='20261113a';
+const VERSION='20261113c';
 const CACHE='arcamis-shell-'+VERSION;
 const ASSETS=['/','/style.css?v='+VERSION,'/app.js?v='+VERSION,'/enhanced.js?v='+VERSION,'/logo.png','/manifest.webmanifest'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)))});

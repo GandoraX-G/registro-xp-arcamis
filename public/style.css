@@ -48,3 +48,6 @@ html{min-height:100%;background:#0b1020}body{min-height:100svh;padding-bottom:ca
 .net-banner button{min-height:36px;padding:6px 11px;border-radius:8px;border:1px solid #866c3f;background:linear-gradient(135deg,#edc66e,#d7a94e);color:#201a10;font-weight:700;flex:0 0 auto}
 .update-banner{border-color:#46608c}
 @media(max-width:760px){.net-banner{bottom:calc(74px + env(safe-area-inset-bottom))}}
+
+.person.is-inactive{opacity:.6;filter:saturate(.6)}
+.person.is-inactive:hover{opacity:.9;filter:none}
