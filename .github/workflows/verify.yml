@@ -1,0 +1,28 @@
+name: verify
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Syntax checks
+        run: npm run check
+      - name: Apply migrations to the local database
+        run: npx wrangler d1 migrations apply arcamis-register --local
+      - name: API smoke test
+        run: |
+          npx wrangler pages dev public --port 8788 --binding BOOTSTRAP_SECRET=test-bootstrap-secret --binding PASSWORD_PEPPER=test-pepper-secret > /tmp/pages.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:8788/api/setup-status > /dev/null; then break; fi
+            sleep 1
+          done
+          BASE_URL=http://127.0.0.1:8788 node scripts/smoke.mjs

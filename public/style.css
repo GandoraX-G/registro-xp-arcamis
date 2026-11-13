@@ -41,3 +41,10 @@ html{min-height:100%;background:#0b1020}body{min-height:100svh;padding-bottom:ca
 }
 @media(min-width:1600px){.layout{grid-template-columns:276px minmax(0,1fr)}.main{padding-left:72px;padding-right:72px}.top{margin-left:-72px;margin-right:-72px;padding-left:72px;padding-right:72px}.grid{gap:22px}.cards{gap:18px}.panel{padding:25px}}
 
+
+/* Banner di rete, aggiornamento e stato offline */
+.net-banner{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:70;display:flex;align-items:center;gap:12px;max-width:min(560px,calc(100vw - 24px));padding:10px 14px;border:1px solid #7a6538;border-radius:11px;background:#1a2338f2;color:var(--text);box-shadow:0 16px 40px #0007;font-size:13px}
+.net-banner span{flex:1;min-width:0}
+.net-banner button{min-height:36px;padding:6px 11px;border-radius:8px;border:1px solid #866c3f;background:linear-gradient(135deg,#edc66e,#d7a94e);color:#201a10;font-weight:700;flex:0 0 auto}
+.update-banner{border-color:#46608c}
+@media(max-width:760px){.net-banner{bottom:calc(74px + env(safe-area-inset-bottom))}}
