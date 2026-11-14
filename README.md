@@ -61,6 +61,7 @@ npx wrangler d1 migrations apply arcamis-register --remote  # database online
 - `0004_calendar_attendance_rewards.sql`: sessioni programmate, presenze, ispirazioni, oggetti.
 - `0005_performance_indexes.sql`: indici per pulizia sessioni, rate limit e audit.
 - `0006_diary_trash_and_drop_attendance.sql`: cestino dei diari di sessione e rimozione della marcatura presenze (le disponibilità del calendario restano).
+- `0007_session_signature.sql`: firma delle sessioni, con l’account che ha inserito ogni voce XP.
 
 Se `migrations apply` risponde `duplicate column name: level`, il database è stato creato senza la tabella di bookkeeping `d1_migrations` (per esempio con SQL eseguito a mano). In quel caso applica solo la migrazione mancante dal file, che è idempotente:
 
