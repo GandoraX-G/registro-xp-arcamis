@@ -62,6 +62,14 @@ npx wrangler d1 migrations apply arcamis-register --remote  # database online
 - `0005_performance_indexes.sql`: indici per pulizia sessioni, rate limit e audit.
 - `0006_diary_trash_and_drop_attendance.sql`: cestino dei diari di sessione e rimozione della marcatura presenze (le disponibilità del calendario restano).
 
+Se `migrations apply` risponde `duplicate column name: level`, il database è stato creato senza la tabella di bookkeeping `d1_migrations` (per esempio con SQL eseguito a mano). In quel caso applica solo la migrazione mancante dal file, che è idempotente:
+
+```bash
+npx wrangler d1 execute arcamis-register --remote --file migrations/0006_diary_trash_and_drop_attendance.sql
+```
+
+L'API risponde `Database non allineato: manca una tabella prevista dal codice` (HTTP 503) quando una migrazione non è applicata, e l'interfaccia continua a funzionare mostrando l'avviso nel cestino.
+
 ### Hash delle password
 
 Formato versionato `pbkdf2_sha512$100000$<hash>` con salt casuale per utente e HMAC con pepper. Cloudflare Workers rifiuta PBKDF2 oltre 100.000 iterazioni (`NotSupportedError`), quindi 100.000 con SHA-512 è il massimo utilizzabile sulla piattaforma. Gli hash del vecchio formato (10.000 iterazioni SHA-256, senza prefisso) restano validi e vengono aggiornati al primo login.
