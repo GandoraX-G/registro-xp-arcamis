@@ -1,6 +1,7 @@
 # Applica le migrazioni D1 al database di produzione.
 # Si avvia a mano da Actions → «D1 migrate» → Run workflow.
-# Richiede due secret del repository: CLOUDFLARE_API_TOKEN e CLOUDFLARE_ACCOUNT_ID.
+# Richiede il secret del repository CLOUDFLARE_API_TOKEN (Account > D1 > Edit).
+# CLOUDFLARE_ACCOUNT_ID è opzionale: se non è quello giusto, viene cercato.
 name: D1 migrate
 
 on:
@@ -8,6 +9,10 @@ on:
 
 permissions:
   contents: read
+
+env:
+  DB_NAME: arcamis-register
+  DB_ID: f8ac45cd-6635-409c-b529-dc1a12d5c8b2
 
 jobs:
   migrate:
@@ -25,34 +30,67 @@ jobs:
       - name: Installa wrangler
         run: npm install --no-save wrangler@4
 
-      - name: Verifica le credenziali
+      - name: Credenziali e account che possiede il database
         run: |
+          set -e
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
-            echo "Manca il secret CLOUDFLARE_API_TOKEN" >&2
+            echo "::error::Manca il secret CLOUDFLARE_API_TOKEN"; exit 1
+          fi
+          npx wrangler whoami || true
+
+          list_db () {
+            curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              "https://api.cloudflare.com/client/v4/accounts/$1/d1/database" \
+              | tr ',' '\n' | grep -o '"uuid":"[^"]*"' | cut -d'"' -f4 | tr '\n' ' '
+          }
+
+          candidates="$CLOUDFLARE_ACCOUNT_ID"
+          extra=$(npx wrangler whoami 2>/dev/null | grep -oE '[0-9a-f]{32}' | sort -u | tr '\n' ' ')
+          for a in $extra; do
+            case " $candidates " in *" $a "*) ;; *) candidates="$candidates $a" ;; esac
+          done
+
+          found=""
+          for a in $candidates; do
+            [ -n "$a" ] || continue
+            ids=$(list_db "$a" || true)
+            echo "account $a → database: ${ids:-nessuno visibile}"
+            case " $ids " in *" $DB_ID "*) found="$a"; break ;; esac
+          done
+
+          if [ -z "$found" ]; then
+            echo "::error::Il token non vede il database $DB_NAME ($DB_ID) in nessuno degli account elencati. Crea il token nell'account proprietario del database con permesso Account > D1 > Edit, oppure imposta CLOUDFLARE_ACCOUNT_ID su quell'account."
             exit 1
           fi
-          npx wrangler whoami
+          echo "ACCOUNT_ID=$found" >> "$GITHUB_ENV"
+          echo "Account corretto per il database: $found"
 
       - name: Migrazione 0006 (cestino diari, rimozione presenze)
-        run: npx wrangler d1 execute arcamis-register --remote --file migrations/0006_diary_trash_and_drop_attendance.sql
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ env.ACCOUNT_ID }}
+        run: npx wrangler d1 execute "$DB_NAME" --remote --file migrations/0006_diary_trash_and_drop_attendance.sql
 
       - name: Migrazione 0007 (firma delle sessioni)
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ env.ACCOUNT_ID }}
         run: |
           set +e
-          HAVE=$(npx wrangler d1 execute arcamis-register --remote --json \
+          HAVE=$(npx wrangler d1 execute "$DB_NAME" --remote --json \
             --command "SELECT name FROM pragma_table_info('xp_entries') WHERE name='created_by'" \
             | grep -c created_by)
           if [ "$HAVE" = "0" ]; then
-            npx wrangler d1 execute arcamis-register --remote --file migrations/0007_session_signature.sql
+            npx wrangler d1 execute "$DB_NAME" --remote --file migrations/0007_session_signature.sql
           else
             echo "0007 già applicata: colonna created_by presente."
           fi
 
       - name: Stato finale dello schema
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ env.ACCOUNT_ID }}
         run: |
-          npx wrangler d1 execute arcamis-register --remote --json \
+          npx wrangler d1 execute "$DB_NAME" --remote --json \
             --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('adventure_trash','xp_entry_trash','session_participation')"
-          npx wrangler d1 execute arcamis-register --remote --json \
+          npx wrangler d1 execute "$DB_NAME" --remote --json \
             --command "SELECT name FROM pragma_table_info('xp_entries') WHERE name='created_by'"
-          npx wrangler d1 execute arcamis-register --remote --json \
+          npx wrangler d1 execute "$DB_NAME" --remote --json \
             --command "SELECT name FROM pragma_table_info('session_participation')"
