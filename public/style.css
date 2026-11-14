@@ -58,3 +58,7 @@ html{min-height:100%;background:#0b1020}body{min-height:100svh;padding-bottom:ca
 .notefoot{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:12px;color:#93a2c7}
 .notefoot .notetools{margin-left:auto;display:flex;gap:9px}
 .note .link{font-size:12px}
+
+/* Barra in basso: le etichette lunghe non devono invadere la voce accanto */
+@media(min-width:391px) and (max-width:760px){.nav button.navtab .navlabel{font-size:9.5px;max-width:100%;overflow:hidden;text-overflow:ellipsis}}
+@media(max-width:390px){.nav button.navtab .navlabel{max-width:100%;overflow:hidden;text-overflow:ellipsis}}
