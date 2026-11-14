@@ -51,3 +51,10 @@ html{min-height:100%;background:#0b1020}body{min-height:100svh;padding-bottom:ca
 
 .person.is-inactive{opacity:.6;filter:saturate(.6)}
 .person.is-inactive:hover{opacity:.9;filter:none}
+
+.notelist{display:grid;gap:11px}
+.note{border:1px solid var(--line);border-radius:12px;padding:13px 15px;background:#0f172acc}
+.note p{margin:0 0 8px;line-height:1.55;word-break:break-word}
+.notefoot{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:12px;color:#93a2c7}
+.notefoot .notetools{margin-left:auto;display:flex;gap:9px}
+.note .link{font-size:12px}

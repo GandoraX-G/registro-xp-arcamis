@@ -44,6 +44,7 @@ jobs:
 
           SQL="SELECT 'adventure_trash='||(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='adventure_trash')
             ||' xp_entry_trash='||(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='xp_entry_trash')
+            ||' player_notes='||(SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='player_notes')
             ||' created_by_xp_entries='||(SELECT COUNT(*) FROM pragma_table_info('xp_entries') WHERE name='created_by')
             ||' created_by_trash='||(SELECT COUNT(*) FROM pragma_table_info('xp_entry_trash') WHERE name='created_by')
             ||' attendance='||(SELECT COUNT(*) FROM pragma_table_info('session_participation') WHERE name='attendance')
