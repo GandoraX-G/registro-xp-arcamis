@@ -98,12 +98,28 @@ jobs:
             echo "0008 già applicata: tabella player_notes presente."
           fi
 
+      - name: Migrazione 0009 (GP, oggetti e note fama nel diario)
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ env.ACCOUNT_ID }}
+        run: |
+          set +e
+          HAVE=$(npx wrangler d1 execute "$DB_NAME" --remote --json \
+            --command "SELECT name FROM pragma_table_info('adventure_details') WHERE name='gp'" \
+            | grep -c '"gp"')
+          if [ "$HAVE" = "0" ]; then
+            npx wrangler d1 execute "$DB_NAME" --remote --file migrations/0009_diary_rewards.sql
+          else
+            echo "0009 già applicata: colonna gp presente."
+          fi
+
       - name: Stato finale dello schema
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ env.ACCOUNT_ID }}
         run: |
           npx wrangler d1 execute "$DB_NAME" --remote --json \
             --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('adventure_trash','xp_entry_trash','player_notes','session_participation')"
+          npx wrangler d1 execute "$DB_NAME" --remote --json \
+            --command "SELECT name FROM pragma_table_info('adventure_details') WHERE name IN ('gp','items','fame')"
           npx wrangler d1 execute "$DB_NAME" --remote --json \
             --command "SELECT name FROM pragma_table_info('xp_entries') WHERE name='created_by'"
           npx wrangler d1 execute "$DB_NAME" --remote --json \
