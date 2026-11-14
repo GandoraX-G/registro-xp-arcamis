@@ -112,6 +112,20 @@ jobs:
             echo "0009 già applicata: colonna gp presente."
           fi
 
+      - name: Migrazione 0010 (fama, resoconti sospesi, GP strutturati)
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ env.ACCOUNT_ID }}
+        run: |
+          set +e
+          HAVE=$(npx wrangler d1 execute "$DB_NAME" --remote --json \
+            --command "SELECT name FROM sqlite_master WHERE type='table' AND name='pending_reports'" \
+            | grep -c pending_reports)
+          if [ "$HAVE" = "0" ]; then
+            npx wrangler d1 execute "$DB_NAME" --remote --file migrations/0010_fame_and_pending.sql
+          else
+            echo "0010 già applicata: tabella pending_reports presente."
+          fi
+
       - name: Stato finale dello schema
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ env.ACCOUNT_ID }}
@@ -119,7 +133,7 @@ jobs:
           npx wrangler d1 execute "$DB_NAME" --remote --json \
             --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('adventure_trash','xp_entry_trash','player_notes','session_participation')"
           npx wrangler d1 execute "$DB_NAME" --remote --json \
-            --command "SELECT name FROM pragma_table_info('adventure_details') WHERE name IN ('gp','items','fame')"
+            --command "SELECT name FROM pragma_table_info('adventure_details') WHERE name IN ('gp','items','fame','gp_amount','gp_per')"
           npx wrangler d1 execute "$DB_NAME" --remote --json \
             --command "SELECT name FROM pragma_table_info('xp_entries') WHERE name='created_by'"
           npx wrangler d1 execute "$DB_NAME" --remote --json \

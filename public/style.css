@@ -67,3 +67,12 @@ html{min-height:100%;background:#0b1020}body{min-height:100svh;padding-bottom:ca
 .rewardgrid .wide{grid-column:1/-1}
 .rewardgrid p{margin:4px 0 0;white-space:pre-wrap}
 .rewardgrid>div{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 12px}
+
+/* Resoconti sospesi e registro della fama */
+.pendingcard{margin-bottom:14px}
+.pendingactions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pendingactions .action,.pendingactions .quiet{padding:6px 10px;font-size:.85rem}
+.fameform{margin-bottom:14px}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{text-align:left;padding:6px 8px;border-bottom:1px solid rgba(127,127,127,.25);vertical-align:top}
+.table .num{text-align:right;font-variant-numeric:tabular-nums}
