@@ -179,7 +179,7 @@ button.link,button.quiet,button.action,.nav button{border-radius:8px}
 .callout.attenzione h3{color:var(--gold)}
 .doclist{margin:10px 0 0;padding-left:18px}
 .doclist li{margin:8px 0;line-height:1.55}
-.doc{scroll-margin-top:14px}
+.doc{scroll-margin-top:72px}
 .doc table{width:100%}
 @media(max-width:560px){
   .doc{padding:15px}
@@ -204,5 +204,30 @@ button.link,button.quiet,button.action,.nav button{border-radius:8px}
 .cronache p{margin:3px 0 0;color:var(--muted);font-size:13px;line-height:1.5}
 @media(max-width:560px){
   .cronache li{grid-template-columns:1fr;gap:3px}
-  .docs-toc{top:0}
+}
+
+@media(max-width:760px){
+  .docs-toc{flex-wrap:wrap;overflow:visible;padding:8px 0}
+  .docs-toc .chip{padding:9px 11px;font-size:11.5px;min-height:38px}
+  .doc{scroll-margin-top:96px}
+}
+
+/* Filtri delle cronache */
+.cron-filtri{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:14px 0 6px}
+.cron-filtri label{display:flex;flex-direction:column;gap:4px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cron-filtri input{background:#0e1729;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:9px 10px;font-size:13px;min-height:42px}
+.cron-filtri input:focus{border-color:var(--gold);outline:none}
+.cron-filtri .cerca{flex:1 1 200px}
+.cron-filtri .cerca input{width:100%}
+.cron-filtri .quiet{min-height:42px}
+.cronache li[hidden]{display:none}
+.proposte{display:grid;gap:12px;margin-top:12px}
+.proposta{position:relative;border:1px solid var(--line);border-radius:10px;background:#111a2e;padding:14px}
+.proposta h4{margin:2px 0 8px;font-size:15px;color:var(--text);text-transform:none;letter-spacing:0}
+.proposta .domanda{color:var(--muted);font-size:13px;margin:0 0 8px}
+.proposta p{margin:0 0 10px;font-size:13px;line-height:1.55}
+.proposta .badge{position:static;display:inline-block}
+@media(max-width:560px){
+  .cron-filtri label{flex:1 1 45%}
+  .cron-filtri .cerca{flex:1 1 100%}
 }
