@@ -5,8 +5,110 @@ const itdate=s=>s?new Date(s+'T12:00:00').toLocaleDateString('it-IT'):'—';
 async function load(){try{[players,entries,adventures,prefs,plans]=await Promise.all([api('players'),api('entries'),api('adventures'),api('settings'),api('session-plans')]);pendingReports=await api('pending-reports');notesError='';notes=await api('player-notes').catch(e=>{notesError=e.message;return []});if(canEdit()){trashError='';[trash,trashAdventures]=await Promise.all([api('trash').catch(e=>{trashError=trashError||e.message;return[]}),api('adventure-trash').catch(e=>{trashError=trashError||e.message;return[]})])}else{trash=[];trashAdventures=[];trashError=''}if(isAdmin())[users,archivedPlayers,auditLog,quality,schemaStatus]=await Promise.all([api('users'),api('archived-players'),api('audit'),api('quality'),api('schema-status').catch(()=>null)]);clearLoadError();render()}catch(e){if(e.status===401)return login(e.message);showLoadError(e.message)}}
 function nav(){const items=[['home',"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" aria-hidden=\"true\"><path d=\"M4 10.6 12 4l8 6.6V20a1 1 0 0 1-1 1h-4.2v-6H9.2v6H5a1 1 0 0 1-1-1z\"/></svg>",'Home'],['players',"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"8\" r=\"3.3\"/><path d=\"M5.5 20.5c0-3.7 2.9-6.2 6.5-6.2s6.5 2.5 6.5 6.2\"/></svg>",'PG'],['sessions',"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" aria-hidden=\"true\"><rect x=\"4.5\" y=\"3.5\" width=\"15\" height=\"17\" rx=\"2\"/><path d=\"M8.5 8.5h7M8.5 12.5h7M8.5 16.5h4\"/></svg>",'Registro'],['calendar',"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" aria-hidden=\"true\"><rect x=\"4\" y=\"5\" width=\"16\" height=\"15\" rx=\"2\"/><path d=\"M4 9.7h16M8.2 3.5v3M15.8 3.5v3\"/></svg>",'Calendario'],['notes',"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" aria-hidden=\"true\"><path d=\"M4 20l4.2-1 9.9-9.9a2.1 2.1 0 0 0-3-3L5.2 16z\"/><path d=\"M14.2 6.1l3 3\"/></svg>",'Note PG'],['docs',"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" aria-hidden=\"true\"><path d=\"M12 6.6C10.2 5.2 8 4.5 5.5 4.5v12.2c2.5 0 4.7.7 6.5 2.1 1.8-1.4 4-2.1 6.5-2.1V4.5c-2.5 0-4.7.7-6.5 2.1z\"/><path d=\"M12 6.6v12.2\"/></svg>",'Documentazione'],['pending',"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" aria-hidden=\"true\"><path d=\"M7 3.5h10M7 20.5h10M8.2 3.5v2.6c0 2 3.8 3.4 3.8 5.9s-3.8 3.9-3.8 5.9v2.6M15.8 3.5v2.6c0 2-3.8 3.4-3.8 5.9s3.8 3.9 3.8 5.9v2.6\"/></svg>",'Sospesi']];if(isAdmin())items.push(['admin',"<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" aria-hidden=\"true\"><path d=\"M4 7h5M13 7h7M4 12h9M17 12h3M4 17h3M11 17h9\"/><circle cx=\"11\" cy=\"7\" r=\"2\"/><circle cx=\"15\" cy=\"12\" r=\"2\"/><circle cx=\"9\" cy=\"17\" r=\"2\"/></svg>",'Admin']);const active=k=>k===page||(k==='players'&&page.startsWith('detail-'))||(k==='sessions'&&page==='adventure');return '<aside class="side">'+brand()+'<nav class="nav" aria-label="Navigazione principale">'+items.map(([k,icon,label])=>'<button class="navtab'+(active(k)?' active':'')+'" data-page="'+k+'" aria-label="'+label+'" title="'+label+'"'+(active(k)?' aria-current="page"':'')+'><span class="navicon" aria-hidden="true">'+icon+'</span><span class="navlabel">'+label+'</span></button>').join('')+'</nav><div class="sidefoot">✧ '+(roleNames[me?.role]||'Account')+' · Tutti gli annali</div></aside>'}
 let ultimaPagina='';
-function docsPage(){return '<section class="panel"><div class="panelhead"><h2>Documentazione</h2></div><p class="sub">Questa sezione è pronta. Qui raccoglieremo i documenti e il materiale di riferimento della campagna.</p></section>'}
-function render(){const nuova=page!==ultimaPagina;ultimaPagina=page;const title={home:'Panoramica',players:'Avventurieri',sessions:'Registro XP',notes:'Note sui PG',docs:'Documentazione',pending:'Resoconti sospesi',calendar:'Calendario sessioni',admin:'Amministrazione',adventure:selectedAdventure?.title||'Sessione'};if(page.startsWith('detail-'))title[page]='Scheda PG';document.body.classList.toggle('compact-session',page==='sessions');app.innerHTML='<div class="layout">'+nav()+'<main class="main'+(nuova?' pagina-nuova':'')+'" id="contenuto"><header class="top"><div><div class="eyebrow">Benvenuto, '+esc(me.username)+' · '+esc(roleNames[me.role]||'')+'</div><h1>'+esc(title[page]||'Scheda PG')+'</h1><p class="sub">'+(page==='docs'?'Documenti e materiale di riferimento della campagna.':'Esperienza, sessioni e cronache della compagnia.')+'</p></div><div class="top-actions"><button class="quiet" id="gsearch">⌕ Cerca <kbd>Ctrl K</kbd></button>'+(canEdit()?'<button class="action" id="newSession">＋ Nuova sessione</button><button class="quiet" id="addEntry">Singolo XP</button>':'')+'<button class="quiet" id="changePassword">Cambia password</button><button class="quiet" id="logout">Esci</button></div></header>'+(page==='calendar'?calendar():page==='home'?home():page==='players'?playerPage():page==='notes'?notesPage():page==='pending'?pendingPage():page==='docs'?docsPage():page==='sessions'?sessionPage():page==='adventure'?adventurePage():page==='admin'&&isAdmin()?adminPage():page.startsWith('detail-')?detail():home())+(page==='admin'&&isAdmin()?'<div id="adminExtras">'+adminExtrasHTML()+'</div>':'')+'</main></div><div class="modal" id="modal"></div>';document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>setPage(b.dataset.page));$('#logout').onclick=async()=>{await post('logout',{});me=null;page='home';history.replaceState(null,'','#');login()};$('#addEntry')?.addEventListener('click',()=>entryForm());$('#newSession')?.addEventListener('click',sessionForm);$('#openTrash')?.addEventListener('click',openTrash);$('#changePassword')?.addEventListener('click',changePasswordForm);bindPage();document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openPlayer(b.dataset.open));$('#calprev')?.addEventListener('click',()=>{calDate.setMonth(calDate.getMonth()-1);render()});$('#calnext')?.addEventListener('click',()=>{calDate.setMonth(calDate.getMonth()+1);render()});$('#newplan')?.addEventListener('click',newPlan);document.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>planDetails(b.dataset.plan));$('#gsearch')?.addEventListener('click',searchModal);if(page.startsWith('detail-'))rewardHandlers();if(page==='admin'&&isAdmin())bindAdminExtras();stampaEtichette();applyDynamicStyles()}
+function docsPage(){
+  const tabella=(intestazioni,righe)=>'<div class="scroll docscroll"><table><thead><tr>'+intestazioni.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+righe.map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+  const rarita=[
+    ['Comune','7','5','Diari, storie locali, guide geografiche di base, racconti popolari'],
+    ['Raro','14','10','Tomi storici dimenticati, manuali tecnici, bestiari regionali, saggi scientifici'],
+    ['Molto raro','21','15','Grimori arcani, testi profetici, segreti di antiche gilde, genealogie nobiliari'],
+    ['Leggendario','25 o più','20','Libri dei Piani, manoscritti originali di divinità, artefatti senzienti']
+  ];
+  const condizioni=[
+    ['Perfetto','Il volume è leggibile e completo. Si applicano i DT base.'],
+    ['Danneggiato o usurato','Il costo aumenta di 2 DT, per esempio a causa di pagine macchiate o strappate.'],
+    ['Codificato o criptato','Prima di studiarlo, il PG deve superare una prova di Intelligenza (Investigazione) per decifrarlo. Il DM stabilisce la CD.'],
+    ['Frammentario','Il tempo richiesto raddoppia per ricostruire i passaggi mancanti.']
+  ];
+  const modalita=[
+    ['Ricerca rapida','1 ora','Cercare un nome o un altro dettaglio specifico.'],
+    ['Studio','4 ore','Comprendere i concetti di base del tomo.'],
+    ['Studio approfondito','8 ore','Comprendere concetti complessi. Se il libro è cifrato o codificato, il PG ottiene +2 alla prova di Intelligenza per decifrarlo.'],
+    ['Ricerca complessa','A discrezione del DM','Per argomenti vasti, il DM può richiedere 3 prove di Intelligenza riuscite prima di fornire le informazioni complete.']
+  ];
+  const ranghi=[
+    ['Ferro','100–200','100','120','140','160','180','200','20','50–200'],
+    ['Bronzo','450–650','450','490','530','570','610','650','40','150–300'],
+    ['Argento','900–1500','900','1020','1140','1260','1380','1500','120','250–400'],
+    ['Oro','1400–2000','1400','1520','1640','1760','1880','2000','120','350–500'],
+    ['Platino','1600–2200','1600','1720','1840','1960','2080','2200','120','450–600'],
+    ['Smeraldo','1800–2400','1800','1920','2040','2160','2280','2400','120','550–700'],
+    ['Diamante','2000–2600','2000','2120','2240','2360','2480','2600','120','650–800'],
+    ['Grandmaster','2200–2800','2200','2320','2440','2560','2680','2800','120','750–900'],
+    ['Challenger','3000','','','','','','','','850–1000']
+  ];
+  const quota=[
+    ['Individuale','5 MO','14 MO','24 MO'],
+    ['Doppia · a persona','4 MO','11 MO','20 MO'],
+    ['Doppia · totale per due','8 MO','22 MO','40 MO']
+  ];
+  return '<nav class="docs-toc" aria-label="Indice della documentazione">'
+    +'<button class="chip" data-doc="lore">1 · Lore</button>'
+    +'<button class="chip" data-doc="libri">2 · Libri</button>'
+    +'<button class="chip" data-doc="xp">3 · XP</button>'
+    +'<button class="chip" data-doc="gilda">4 · Quota di gilda</button>'
+    +'</nav>'
+
+    +'<section class="panel doc" id="docs-lore">'
+    +'<div class="eyebrow">01 · Ambientazione</div>'
+    +'<h2>Lore del mondo e degli dei</h2>'
+    +'<p class="sub">Materiale di riferimento su Arcamis e sul pantheon. Entrambi i documenti sono in lavorazione.</p>'
+    +'<div class="doclinks">'
+    +'<a class="doclink" href="https://docs.google.com/document/d/1gEcmKmRgoaFpvfYbOXGujXCZk-Ktrbu4OcJ6ZU44joQ/edit?usp=sharing" target="_blank" rel="noopener"><span><b>Lore del Mondo</b><small>Cronache e avvenimenti di Arcamis, capitolo per capitolo.</small></span><span class="badge wip">WIP</span></a>'
+    +'<a class="doclink" href="https://docs.google.com/document/d/151BnjDRjwBFjc30vrlCeDKpthF2fN5tyBFWU2ofSm8E/edit?usp=sharing" target="_blank" rel="noopener"><span><b>Lore sugli Dei</b><small>Schede dei tredici eroi e delle loro classi.</small></span><span class="badge wip">WIP</span></a>'
+    +'<a class="doclink" href="https://pin.it/3kkGx2e42" target="_blank" rel="noopener"><span><b>Immagini dei 13 eroi</b><small>Raccolta visiva su Pinterest.</small></span><span class="badge">Immagini</span></a>'
+    +'<a class="doclink" href="https://pin.it/XV8nhYFan" target="_blank" rel="noopener"><span><b>Immagini dei 13 dei</b><small>Raccolta visiva su Pinterest.</small></span><span class="badge">Immagini</span></a>'
+    +'</div>'
+    +'<div class="callout"><p>I due documenti sono ancora incompleti: il contenuto di questa pagina non li sostituisce, serve come punto di partenza per chi prepara una sessione.</p></div>'
+    +'</section>'
+
+    +'<section class="panel doc" id="docs-libri">'
+    +'<div class="eyebrow">02 · Ricerca e studio</div>'
+    +'<h2>Libri: rarità, condizioni e consultazione</h2>'
+    +'<p class="sub">La rarità del volume stabilisce i DT base per completare la ricerca o lo studio e la CD di riferimento. Il DM sceglie l’abilità pertinente in base all’argomento.</p>'
+    +'<h3>Rarità e difficoltà</h3>'
+    +tabella(['Rarità','DT base','CD','Esempi'],rarita)
+    +'<h3>Condizioni del volume</h3>'
+    +tabella(['Condizione','Effetto'],condizioni)
+    +'<h3>Modalità di consultazione</h3>'
+    +tabella(['Modalità','Durata','Risultato'],modalita)
+    +'<div class="callout"><h3>Al tavolo</h3><p>Il DM può chiedere una prova di Arcano, Storia, Natura o Religione in base alla materia. Studiare in una biblioteca attrezzata dà vantaggio alle prove. Chi consulta un libro o un documento che riguarda il Void deve superare un tiro salvezza di Saggezza con CD 12.</p></div>'
+    +'<div class="callout attenzione"><h3>Da definire</h3><ul>'
+    +'<li>Come si rapportano le ore delle singole consultazioni ai DT complessivi.</li>'
+    +'<li>Come si combinano le condizioni quando un volume ne ha più di una.</li>'
+    +'<li>Cosa succede se il PG fallisce il tiro salvezza sul Void.</li>'
+    +'</ul></div>'
+    +'</section>'
+
+    +'<section class="panel doc" id="docs-xp">'
+    +'<div class="eyebrow">03 · Ricompense</div>'
+    +'<h2>Assegnazione degli XP da parte dei DM</h2>'
+    +'<p class="sub">Il sistema in prova prevede fasce di ricompensa per ogni rango. Il DM valuta la difficoltà della sessione e usa l’intervallo della fascia corrispondente. Una sessione semplice e senza rischio concreto di morte ricade verso le fasce basse, una sessione mortale verso quelle alte. Il valore preciso dentro l’intervallo lo sceglie il DM.</p>'
+    +'<h3>Tabella del foglio di prova</h3>'
+    +tabella(['Rango','XP','1','2','3','4','5','6','Distacco','Bonus'],ranghi)
+    +'<p class="sub">La stessa fascia rappresenta lo stesso grado di ricompensa rispetto al rango: una fascia alta per Ferro, Bronzo o Argento occupa la stessa posizione nelle rispettive tabelle, con quantità di XP scalate per rango.</p>'
+    +'<div class="callout attenzione"><h3>Da chiarire</h3><p>Il testo parla di cinque fasce, il foglio ne riporta sei colonne numerate. Va deciso quale delle due versioni è quella buona prima di usarlo in sessione.</p></div>'
+    +'<p class="sub">L’obiettivo è dare ai DM un criterio comune per motivare le differenze di XP tra sessioni e ridurre i dubbi sui favoritismi, mantenendo un margine di scelta nella ricompensa finale. I valori effettivi restano quelli del <a class="link" href="https://docs.google.com/spreadsheets/d/1apE9ZoOkVRsTAUb1CQVeqC5rYY0xdAy5gPtc_n3iLPs/edit?usp=drivesdk" target="_blank" rel="noopener">foglio XP di prova</a>.</p>'
+    +'</section>'
+
+    +'<section class="panel doc" id="docs-gilda">'
+    +'<div class="eyebrow">04 · Cittadinanza</div>'
+    +'<h2>Quota della Gilda e cittadinanza gildana</h2>'
+    +'<p class="sub">La quota mensile dà al personaggio lo status di cittadino gildano di Arcamis, riconosciuto dal regno di Arcadia.</p>'
+    +'<h3>Diritti e servizi</h3>'
+    +'<ul class="doclist">'
+    +'<li><b>Posto letto e pasti.</b> Può alloggiare negli spazi riservati ai membri e usufruire dei pasti in locanda. Il servizio funziona come la mensa e gli alloggi di una caserma: il membro sceglie quanto usufruirne e la quota mensile resta fissa.</li>'
+    +'<li><b>Missioni e incarichi.</b> Può accedere alle missioni e agli incarichi della Gilda.</li>'
+    +'<li><b>Cure ospedaliere.</b> Può accedere alle cure in ospedale senza pagare di tasca propria. Chi è esterno alla Gilda paga per intero le eventuali terapie previste dal sistema delle malattie.</li>'
+    +'<li><b>Protezione legale.</b> Gode della protezione riconosciuta ai cittadini gildani di Arcamis sotto il regno di Arcadia.</li>'
+    +'<li><b>Apertura di attività.</b> Può presentare domanda per aprire un’attività. Agli esterni alla Gilda è preclusa la presentazione della domanda.</li>'
+    +'</ul>'
+    +'<h3>Costi</h3>'
+    +tabella(['Sistemazione','1 mese','3 mesi · −10%','6 mesi · −20%'],quota)
+    +'<p class="sub">Lo sconto è del 10% per 3 mesi e del 20% per 6 mesi. Si arrotonda per difetto alla MO intera, quindi il costo finale si arrotonda per eccesso. Per la stanza doppia il calcolo è fatto sulla quota di ciascun occupante.</p>'
+    +'<div class="callout"><h3>Esempio</h3><p>Tre mesi in stanza individuale partono da 15 MO. Lo sconto del 10% è 1,5 MO, arrotondato per difetto a 1 MO. Il costo finale è 14 MO.</p></div>'
+    +'</section>';
+}
+function render(){const nuova=page!==ultimaPagina;ultimaPagina=page;const title={home:'Panoramica',players:'Avventurieri',sessions:'Registro XP',notes:'Note sui PG',docs:'Documentazione',pending:'Resoconti sospesi',calendar:'Calendario sessioni',admin:'Amministrazione',adventure:selectedAdventure?.title||'Sessione'};if(page.startsWith('detail-'))title[page]='Scheda PG';document.body.classList.toggle('compact-session',page==='sessions');app.innerHTML='<div class="layout">'+nav()+'<main class="main'+(nuova?' pagina-nuova':'')+'" id="contenuto"><header class="top"><div><div class="eyebrow">Benvenuto, '+esc(me.username)+' · '+esc(roleNames[me.role]||'')+'</div><h1>'+esc(title[page]||'Scheda PG')+'</h1><p class="sub">'+(page==='docs'?'Documenti e materiale di riferimento della campagna.':'Esperienza, sessioni e cronache della compagnia.')+'</p></div><div class="top-actions"><button class="quiet" id="gsearch">⌕ Cerca <kbd>Ctrl K</kbd></button>'+(canEdit()?'<button class="action" id="newSession">＋ Nuova sessione</button><button class="quiet" id="addEntry">Singolo XP</button>':'')+'<button class="quiet" id="changePassword">Cambia password</button><button class="quiet" id="logout">Esci</button></div></header>'+(page==='calendar'?calendar():page==='home'?home():page==='players'?playerPage():page==='notes'?notesPage():page==='pending'?pendingPage():page==='docs'?docsPage():page==='sessions'?sessionPage():page==='adventure'?adventurePage():page==='admin'&&isAdmin()?adminPage():page.startsWith('detail-')?detail():home())+(page==='admin'&&isAdmin()?'<div id="adminExtras">'+adminExtrasHTML()+'</div>':'')+'</main></div><div class="modal" id="modal"></div>';document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>setPage(b.dataset.page));$('#logout').onclick=async()=>{await post('logout',{});me=null;page='home';history.replaceState(null,'','#');login()};$('#addEntry')?.addEventListener('click',()=>entryForm());$('#newSession')?.addEventListener('click',sessionForm);$('#openTrash')?.addEventListener('click',openTrash);$('#changePassword')?.addEventListener('click',changePasswordForm);bindPage();document.querySelectorAll('[data-doc]').forEach(b=>b.onclick=()=>{const t=document.getElementById('docs-'+b.dataset.doc);if(t)t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'})});document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openPlayer(b.dataset.open));$('#calprev')?.addEventListener('click',()=>{calDate.setMonth(calDate.getMonth()-1);render()});$('#calnext')?.addEventListener('click',()=>{calDate.setMonth(calDate.getMonth()+1);render()});$('#newplan')?.addEventListener('click',newPlan);document.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>planDetails(b.dataset.plan));$('#gsearch')?.addEventListener('click',searchModal);if(page.startsWith('detail-'))rewardHandlers();if(page==='admin'&&isAdmin())bindAdminExtras();stampaEtichette();applyDynamicStyles()}
 function calendar(){let y=calDate.getFullYear(),m=calDate.getMonth(),start=(new Date(y,m,1).getDay()+6)%7,n=new Date(y,m+1,0).getDate(),days='';for(let i=0;i<start;i++)days+='<div class="cal-cell blank"></div>';for(let d=1;d<=n;d++){let k=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');days+='<div class="cal-cell"><b>'+d+'</b>'+plans.filter(p=>p.date===k&&p.status!=='cancelled').map(p=>'<button class="cal-event" data-plan="'+p.id+'">'+esc(p.start_time||'')+' '+esc(p.title)+'</button>').join('')+'</div>'}return '<section class="panel"><div class="panelhead"><button id="calprev" class="quiet">←</button><h2>'+calDate.toLocaleDateString('it-IT',{month:'long',year:'numeric'})+'</h2><button id="calnext" class="quiet">→</button>'+(canEdit()?'<button id="newplan" class="action">＋ Programma</button>':'')+'</div><div class="calendar-grid">'+['Lun','Mar','Mer','Gio','Ven','Sab','Dom'].map(x=>'<b class="cal-weekday">'+x+'</b>').join('')+days+'</div></section>'}
 function newPlan(){let people=players.map(p=>'<label>'+esc(p.name)+' <select name="a_'+p.id+'"><option value="pending">Da confermare</option><option value="available">Disponibile</option><option value="maybe">Forse</option><option value="unavailable">Assente</option></select></label>').join('');openModal('Programma sessione','<div class="formgrid"><label class="wide">Titolo<input name="title" required></label><label>Data<input name="date" type="date" min="'+todayISO()+'" value="'+todayISO()+'" required></label><label>Ora<input name="start_time" type="time"></label><label>Tipo<select name="type">'+typesSelect('Principale')+'</select></label><label>Luogo<input name="location"></label><label class="wide">Note<textarea name="notes"></textarea></label></div><h3>Disponibilità avventurieri</h3><div class="availability-list">'+people+'</div>',async f=>{let d=Object.fromEntries(f);d.participants=players.map(p=>({player_id:p.id,availability:d['a_'+p.id]}));await post('session-plans',d);await load()})}
 function planDetails(id){let p=plans.find(x=>x.id===id);if(p)openModal(esc(p.title),'<p>'+itdate(p.date)+' · '+esc(p.start_time||'')+' · '+esc(p.location||'')+'</p><p>'+esc(p.notes||'')+'</p><div class="scroll"><table><tbody>'+p.participants.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+esc(x.availability)+'</td></tr>').join('')+'</tbody></table></div>'+(canEdit()?'<button id="editPlan" class="action">Modifica / segna presenze</button>':'')+(canEdit()&&p.status==='planned'?'<button id="completePlan" class="quiet">Segna sessione completata</button><button id="cancelPlan" class="quiet danger">Annulla</button>':''),null);$('#editPlan')?.addEventListener('click',()=>editPlan(p));$('#completePlan')?.addEventListener('click',()=>editPlan(p,true));$('#cancelPlan')?.addEventListener('click',async()=>{await api('session-plans/'+id,{method:'DELETE'});await load()})}

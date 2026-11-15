@@ -156,3 +156,32 @@ button.link,button.quiet,button.action,.nav button{border-radius:8px}
 @keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .main.pagina-nuova{animation:pageIn .18s ease-out both}
 @media(prefers-reduced-motion:reduce){.main.pagina-nuova{animation:none}}
+
+/* Documentazione */
+.docs-toc{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 4px}
+.docs-toc .chip{border:1px solid var(--line);background:#111a2e;color:var(--text);padding:11px 14px;border-radius:99px;font-size:12px;min-height:44px}
+.docs-toc .chip:hover{border-color:var(--gold);color:var(--gold)}
+.doc h2{margin:2px 0 6px}
+.doc h3{margin:20px 0 8px;font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--gold)}
+.doc .eyebrow{margin-bottom:2px}
+.docscroll{max-height:none}
+.doclink{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#111a2e;color:var(--text);text-decoration:none;min-height:56px}
+.doclink:hover{border-color:var(--gold)}
+.doclink small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.doclinks{display:grid;gap:10px;margin:14px 0 0}
+.badge.wip{background:rgba(242,198,109,.14);color:var(--gold);border:1px solid rgba(242,198,109,.4)}
+.callout{margin-top:16px;padding:12px 14px;border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:0 10px 10px 0;background:rgba(120,219,195,.06)}
+.callout h3{margin:0 0 6px;color:var(--teal);font-size:12px;letter-spacing:.09em;text-transform:uppercase}
+.callout p{margin:0;color:var(--text)}
+.callout ul{margin:8px 0 0;padding-left:18px}
+.callout li{margin:6px 0}
+.callout.attenzione{border-left-color:var(--gold);background:rgba(242,198,109,.06)}
+.callout.attenzione h3{color:var(--gold)}
+.doclist{margin:10px 0 0;padding-left:18px}
+.doclist li{margin:8px 0;line-height:1.55}
+.doc{scroll-margin-top:14px}
+.doc table{width:100%}
+@media(max-width:560px){
+  .doc{padding:15px}
+  .docs-toc .chip{flex:1 1 auto;justify-content:center;text-align:center}
+}
