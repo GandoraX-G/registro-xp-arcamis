@@ -118,6 +118,7 @@ boot();
 
 
 document.addEventListener('click',async e=>{
+  const t=e.target.closest?e.target.closest('[data-pending-new],[data-pending-archive],[data-pending-reopen],[data-pending-delete],[data-sheet]'):null;
   if(!t)return;
   let id;
   try{
