@@ -61,8 +61,8 @@ async function importData(){let file=$('#importFile').files[0],result=$('#import
 function parseCSV(text){let rows=[],row=[],cell='',quoted=false,head=text.split(/\r?\n/,1)[0],delimiter=(head.match(/;/g)||[]).length>(head.match(/,/g)||[]).length?';':',';for(let i=0;i<text.length;i++){let c=text[i];if(quoted){if(c==='"'&&text[i+1]==='"'){cell+='"';i++}else if(c==='"')quoted=false;else cell+=c}else if(c==='"')quoted=true;else if(c===delimiter){row.push(cell);cell=''}else if(c==='\n'){row.push(cell.replace(/\r$/,''));rows.push(row);row=[];cell=''}else cell+=c}if(cell||row.length){row.push(cell.replace(/\r$/,''));rows.push(row)}let headers=(rows.shift()||[]).map(h=>h.trim().toLocaleLowerCase('it').normalize('NFD').replace(/[\u0300-\u036f]/g,'')),ix=(...names)=>headers.findIndex(h=>names.includes(h));let iDate=ix('data','date'),iPlayer=ix('pg','personaggio','avventuriero','player'),iTitle=ix('avventura','titolo','sessione','title'),iType=ix('tipo','type'),iXp=ix('xp','esperienza'),iNotes=ix('note','notes');if([iDate,iPlayer,iTitle,iXp].some(i=>i<0))throw Error('Intestazioni mancanti: servono almeno data, pg, avventura e xp.');return rows.filter(r=>r.some(x=>x.trim())).map(r=>({date:csvDate(r[iDate]||''),player:r[iPlayer]||'',title:r[iTitle]||'',type:r[iType]||'Principale',xp:Number(String(r[iXp]||'').replace(',','.'))||0,notes:iNotes>=0?r[iNotes]||'':''}))}
 function csvDate(s){s=String(s).trim();if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;let m=s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);return m?`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`:s}
 async function importCSV(){if(!csvRows.length)return;let unknown=csvRows.map(x=>x.player).filter(name=>!players.some(p=>p.name.toLocaleLowerCase('it')===name.trim().toLocaleLowerCase('it')));if(unknown.length){alert('Aggiungi prima i personaggi mancanti: '+[...new Set(unknown)].join(', '));return}if(!confirm(`Aggiungere fino a ${csvRows.length} voci XP? Le righe duplicate verranno saltate.`))return;try{let r=await post('import-csv',{entries:csvRows});alert(`Importate ${r.added} voci; ${r.skipped} duplicate o non valide ignorate.`);csvRows=[];await load()}catch(e){alert(e.message)}}
-let pendingReports=[],fameEntries=[];
-async function load(){try{[players,entries,adventures,prefs]=await Promise.all([api('players'),api('entries'),api('adventures'),api('settings')]);[pendingReports,fameEntries]=await Promise.all([api('pending-reports'),api('fame')]);notesError='';notes=await api('player-notes').catch(e=>{notesError=e.message;return []});if(canEdit()){trashError='';[trash,trashAdventures]=await Promise.all([api('trash').catch(e=>{trashError=trashError||e.message;return[]}),api('adventure-trash').catch(e=>{trashError=trashError||e.message;return[]})])}else{trash=[];trashAdventures=[];trashError=''}if(isAdmin())[users,archivedPlayers,auditLog,quality,schemaStatus]=await Promise.all([api('users'),api('archived-players'),api('audit'),api('quality'),api('schema-status').catch(()=>null)]);else{users=[];archivedPlayers=[];auditLog=[];schemaStatus=null;quality={players:[],entries:[]}}if(page==='adventure'&&selectedAdventure)selectedAdventure=groups().find(x=>x.key===selectedAdventure.key)||selectedAdventure;clearLoadError();render()}catch(e){if(e.status===401)return login(e.message);showLoadError(e.message)}}
+let pendingReports=[];
+async function load(){try{[players,entries,adventures,prefs]=await Promise.all([api('players'),api('entries'),api('adventures'),api('settings')]);pendingReports=await api('pending-reports');notesError='';notes=await api('player-notes').catch(e=>{notesError=e.message;return []});if(canEdit()){trashError='';[trash,trashAdventures]=await Promise.all([api('trash').catch(e=>{trashError=trashError||e.message;return[]}),api('adventure-trash').catch(e=>{trashError=trashError||e.message;return[]})])}else{trash=[];trashAdventures=[];trashError=''}if(isAdmin())[users,archivedPlayers,auditLog,quality,schemaStatus]=await Promise.all([api('users'),api('archived-players'),api('audit'),api('quality'),api('schema-status').catch(()=>null)]);else{users=[];archivedPlayers=[];auditLog=[];schemaStatus=null;quality={players:[],entries:[]}}if(page==='adventure'&&selectedAdventure)selectedAdventure=groups().find(x=>x.key===selectedAdventure.key)||selectedAdventure;clearLoadError();render()}catch(e){if(e.status===401)return login(e.message);showLoadError(e.message)}}
 function gpLabel(d){if(!d)return '';if(Number(d.gp_amount)>0){const t=Number(d.gp_amount)+' mo '+(d.gp_per==='gruppo'?'al gruppo':'a testa');return d.gp?t+' · '+d.gp:t}return d.gp||''}
 function normalizeName(s){return String(s||'').toLocaleLowerCase('it').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim()}
 function gpAmount(t){const m=String(t||'').match(/(\d{1,6})/);return m?Number(m[1]):0}
@@ -76,11 +76,12 @@ function pendingPage(){
   const list=Array.isArray(pendingReports)?pendingReports:[];
   const open=list.filter(r=>r.status!=='archiviato'),done=list.filter(r=>r.status==='archiviato');
   const card=r=>{
+    const val=k=>String(r[k]||'').trim();
     const rewards=[
-      r.xp?`<div><span class="eyebrow">XP</span><p>${esc(r.xp)}</p></div>`:'',
-      r.gp?`<div><span class="eyebrow">GP</span><p>${esc(r.gp)}</p></div>`:'',
-      r.items?`<div class="wide"><span class="eyebrow">Oggetti</span><p>${esc(r.items)}</p></div>`:'',
-      r.fame?`<div class="wide"><span class="eyebrow">Note fama</span><p>${esc(r.fame)}</p></div>`:''
+      val('xp')?`<div><span class="eyebrow">XP</span><p>${esc(val('xp'))}</p></div>`:'',
+      val('gp')?`<div><span class="eyebrow">GP</span><p>${esc(val('gp'))}</p></div>`:'',
+      val('items')?`<div class="wide"><span class="eyebrow">Oggetti</span><p>${esc(val('items'))}</p></div>`:'',
+      val('fame')?`<div class="wide"><span class="eyebrow">Note fama</span><p>${esc(val('fame'))}</p></div>`:''
     ].join('');
     const actions=isAdmin()?`<div class="pendingactions"><button class="action" data-pending-new="${esc(r.id)}">Crea sessione</button>${r.status==='archiviato'?`<button class="quiet" data-pending-reopen="${esc(r.id)}">Riapri</button>`:`<button class="quiet" data-pending-archive="${esc(r.id)}">Archivia</button>`}<button class="link danger" data-pending-delete="${esc(r.id)}">Elimina</button></div>`:'';
     return `<article class="panel pendingcard"><div class="panelhead"><div><div class="eyebrow">${esc(date(r.date))} · ${r.status==='archiviato'?'archiviato':'in sospeso'}</div><h3>${esc(r.title)}</h3></div>${actions}</div><p class="sub">${esc(r.players||'')}</p><div class="rewardgrid">${rewards}</div>${r.note?`<p class="sub">${esc(r.note)}</p>`:''}</article>`;
@@ -119,21 +120,7 @@ function render(){let titles={home:'Panoramica',players:'Avventurieri',sessions:
 boot();
 
 
-function famePage(){
-  const rows=Array.isArray(fameEntries)?fameEntries:[],nat={},pg={},order=[];
-  rows.forEach(r=>{const d=Number(r.delta)||0;if(!nat[r.nation]){nat[r.nation]={t:0,n:0};order.push(r.nation)}nat[r.nation].t+=d;nat[r.nation].n++;if(r.player_id){const k=r.player_name||r.player_id;if(!pg[k])pg[k]={t:0,n:0};pg[k].t+=d;pg[k].n++}});
-  const fmt=v=>(v>0?'+':'')+v;
-  const natRows=order.slice().sort((a,b)=>nat[b].t-nat[a].t).map(k=>`<tr><td>${esc(k)}</td><td class="num">${fmt(nat[k].t)}</td><td class="num">${nat[k].n}</td></tr>`).join('');
-  const pgRows=Object.keys(pg).sort((a,b)=>pg[b].t-pg[a].t).map(k=>`<tr><td>${esc(k)}</td><td class="num">${fmt(pg[k].t)}</td><td class="num">${pg[k].n}</td></tr>`).join('');
-  const form=canEdit()?`<form class="panel fameform" id="fameForm"><div class="eyebrow">Nuova voce</div><div class="formgrid"><label>Data<input name="date" type="date" value="${todayISO()}" required></label><label>Nazione<input name="nation" list="fameNations" required placeholder="es. Arcamis"><datalist id="fameNations">${order.map(k=>`<option value="${esc(k)}"></option>`).join('')}</datalist></label><label>PG<select name="player_id"><option value="">Tutto il gruppo</option>${players.filter(p=>p.active).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></label><label>Variazione<select name="delta"><option value="1">+1</option><option value="2">+2</option><option value="3">+3</option><option value="-1">-1</option><option value="-2">-2</option><option value="-3">-3</option></select></label><label class="wide">Motivo<input name="reason" maxlength="1000" placeholder="es. Aver difeso Rivorosso"></label></div><div class="buttons"><button class="action">Registra</button></div></form>`:'';
-  const list=rows.map(r=>`<tr><td>${esc(date(r.date))}</td><td>${esc(r.nation)}</td><td>${esc(r.player_name||'tutto il gruppo')}</td><td class="num">${fmt(Number(r.delta)||0)}</td><td>${esc(r.title||'')}</td><td>${esc(r.reason||'')}</td>${isAdmin()?`<td><button class="link danger" data-fame-del="${esc(r.id)}">Elimina</button></td>`:''}</tr>`).join('');
-  return `<section class="panel"><div class="eyebrow">Fama</div><h2>Come Arcamis è vista dalle nazioni</h2><p class="sub">Ogni voce vale da -3 a +3 e può riguardare tutto il gruppo o un singolo PG. Ricorda: il vincolo vale per sessione.</p></section>`+form+
-  `<section class="panel"><h3 class="section-title">Per nazione</h3>${natRows?`<table class="table"><thead><tr><th>Nazione</th><th class="num">Fama</th><th class="num">Voci</th></tr></thead><tbody>${natRows}</tbody></table>`:'<p class="sub">Nessuna voce registrata.</p>'}</section>`+
-  `<section class="panel"><h3 class="section-title">Per personaggio</h3>${pgRows?`<table class="table"><thead><tr><th>PG</th><th class="num">Fama</th><th class="num">Voci</th></tr></thead><tbody>${pgRows}</tbody></table>`:'<p class="sub">Nessuna voce individuale.</p>'}</section>`+
-  (rows.length?`<section class="panel"><h3 class="section-title">Registro</h3><table class="table"><thead><tr><th>Data</th><th>Nazione</th><th>PG</th><th class="num">Δ</th><th>Sessione</th><th>Motivo</th>${isAdmin()?'<th></th>':''}</tr></thead><tbody>${list}</tbody></table></section>`:'');
-}
 document.addEventListener('click',async e=>{
-  const t=e.target.closest?e.target.closest('[data-pending-new],[data-pending-archive],[data-pending-reopen],[data-pending-delete],[data-fame-del],[data-sheet]'):null;
   if(!t)return;
   let id;
   try{
@@ -142,15 +129,9 @@ document.addEventListener('click',async e=>{
     else if((id=t.getAttribute('data-pending-reopen'))){await put('pending-reports/'+id,{status:'aperto'});await load()}
     else if((id=t.getAttribute('data-pending-delete'))){if(!confirm('Eliminare questo resoconto in sospeso?'))return;await api('pending-reports/'+id,{method:'DELETE'});await load()}
     else if((id=t.getAttribute('data-sheet')))await showSheetPreview(id);
-    else if((id=t.getAttribute('data-fame-del'))){if(!confirm('Eliminare questa voce di fama?'))return;await api('fame/'+id,{method:'DELETE'});await load()}
   }catch(x){alert(x.message)}
 });
-document.addEventListener('submit',async e=>{
-  if(!e.target||e.target.id!=='fameForm')return;
-  e.preventDefault();
-  const f=new FormData(e.target);
-  try{await post('fame',{date:f.get('date'),nation:f.get('nation'),player_id:f.get('player_id'),delta:Number(f.get('delta')),reason:f.get('reason')});await load()}catch(x){alert(x.message)}
-});
+
 
 async function showSheetPreview(id){
   try{

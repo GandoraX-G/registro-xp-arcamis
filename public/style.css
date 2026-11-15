@@ -72,7 +72,47 @@ html{min-height:100%;background:#0b1020}body{min-height:100svh;padding-bottom:ca
 .pendingcard{margin-bottom:14px}
 .pendingactions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .pendingactions .action,.pendingactions .quiet{padding:6px 10px;font-size:.85rem}
-.fameform{margin-bottom:14px}
-.table{width:100%;border-collapse:collapse}
 .table th,.table td{text-align:left;padding:6px 8px;border-bottom:1px solid rgba(127,127,127,.25);vertical-align:top}
-.table .num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* Rifiniture mobile, focus e movimento */
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px}
+.scroll{width:100%;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.panelhead{gap:10px}
+.pendingactions .action,.pendingactions .quiet{min-height:38px}
+.pendingcard .eyebrow{overflow-wrap:anywhere}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.person-polished:hover,.card:hover{transform:none}}
+@media(max-width:760px){
+  .panelhead{align-items:flex-start}
+  .pendingactions{width:100%;gap:6px}
+  .pendingactions .action,.pendingactions .quiet,.pendingactions .link{flex:1 1 auto;min-height:44px}
+  .pendingactions .link{text-align:center}
+  .rewardgrid{grid-template-columns:1fr}
+  table{min-width:520px}
+  th,td{padding-left:7px;padding-right:7px}
+  .person-meta{flex-wrap:wrap;gap:2px 12px}
+  .person-identity h3{overflow-wrap:anywhere}
+  .notefoot .notetools{width:100%;margin-left:0;justify-content:flex-end}
+  .searchrow>button{min-height:44px}
+  .filters>*{min-height:44px}
+  .dialog .formgrid label{font-size:12px}
+  .tag{overflow-wrap:anywhere}
+}
+@media(max-width:420px){
+  .main{padding-left:10px;padding-right:10px}
+  .pendingcard .panelhead{flex-direction:column;align-items:stretch}
+  .rewardgrid>div{padding:9px 10px}
+  .person-progress{padding:10px}
+  .chart{height:150px}
+  .upcoming-row b{min-width:0}
+}
+
+/* Pulsanti senza classe e tabelle su schermi stretti */
+button{background:#25314b;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+button.link,button.quiet,button.action,.nav button{border-radius:8px}
+@media(max-width:560px){
+  table{min-width:520px}
+  th{white-space:nowrap}
+  td,th{overflow-wrap:break-word}
+  .navlabel{max-width:100%}
+  .card .metric{font-size:19px}
+}
