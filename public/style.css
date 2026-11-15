@@ -133,3 +133,11 @@ button.link,button.quiet,button.action,.nav button{border-radius:8px}
   td select{width:100%;min-width:0;min-height:40px}
   td .link{display:inline-block;min-height:36px;padding:4px 0;margin-right:14px;text-align:left}
 }
+
+/* Barra in basso: solo emoji, il nome resta per i lettori di schermo */
+@media(max-width:760px){
+  .navtab .navlabel{display:none}
+  .navtab .navicon{width:auto;font-size:23px;line-height:1}
+  .nav button.navtab{height:56px;min-height:56px;gap:0;position:relative}
+  .navtab.active::after{content:"";position:absolute;bottom:5px;left:50%;width:18px;height:3px;margin-left:-9px;border-radius:2px;background:var(--gold)}
+}
