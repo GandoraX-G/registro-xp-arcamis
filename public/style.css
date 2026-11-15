@@ -185,3 +185,24 @@ button.link,button.quiet,button.action,.nav button{border-radius:8px}
   .doc{padding:15px}
   .docs-toc .chip{flex:1 1 auto;justify-content:center;text-align:center}
 }
+
+/* Indice della documentazione, fisso durante la lettura */
+.docs-toc{position:sticky;top:0;z-index:6;background:rgba(11,16,32,.94);padding:10px 0;margin:0 0 6px;border-bottom:1px solid var(--line);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.docs-toc::-webkit-scrollbar{display:none}
+.docs-toc .chip{flex:0 0 auto;white-space:nowrap}
+.capitolo{border:1px solid var(--line);border-radius:10px;background:#111a2e;margin-top:10px}
+.capitolo summary{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;min-height:48px;list-style:none}
+.capitolo summary::-webkit-details-marker{display:none}
+.capitolo summary::after{content:'+';color:var(--gold);font-size:16px}
+.capitolo[open] summary::after{content:'−'}
+.capitolo summary span:first-child{font-weight:600}
+.conteggio{color:var(--muted);font-size:11px;margin-left:auto}
+.cronache{list-style:none;margin:0;padding:0 14px 8px}
+.cronache li{display:grid;grid-template-columns:88px 1fr;gap:12px;padding:11px 0;border-top:1px solid rgba(127,127,127,.18)}
+.crono-data{color:var(--gold);font-size:12px;font-variant-numeric:tabular-nums}
+.cronache b{display:block;font-size:13px}
+.cronache p{margin:3px 0 0;color:var(--muted);font-size:13px;line-height:1.5}
+@media(max-width:560px){
+  .cronache li{grid-template-columns:1fr;gap:3px}
+  .docs-toc{top:0}
+}
