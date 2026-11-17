@@ -1,0 +1,63 @@
+# Applica un file SQL di dati al database D1 di produzione.
+# Si avvia a mano da Actions → «D1 apply» → Run workflow, indicando il percorso del file.
+# Richiede il secret del repository CLOUDFLARE_API_TOKEN (Account > D1 > Edit).
+name: D1 apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      file:
+        description: 'Percorso del file SQL nel repository'
+        required: true
+        default: data/2026-11-diary-rewards.sql
+
+permissions:
+  contents: read
+
+env:
+  DB_NAME: arcamis-register
+  DB_ID: f8ac45cd-6635-409c-b529-dc1a12d5c8b2
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Installa wrangler
+        run: npm install --no-save --silent --no-audit --no-fund wrangler@4
+
+      - name: Applica il file
+        run: |
+          set -e
+          FILE="${{ inputs.file }}"
+          case "$FILE" in
+            data/*|migrations/*) ;;
+            *) echo "::error::Sono ammessi solo file in data/ o migrations/"; exit 1 ;;
+          esac
+          [ -f "$FILE" ] || { echo "::error::File non trovato: $FILE"; exit 1; }
+
+          extra=$(npx wrangler whoami 2>/dev/null | grep -oE '[0-9a-f]{32}' | sort -u | tr '\n' ' ')
+          acc=""
+          for a in $CLOUDFLARE_ACCOUNT_ID $extra; do
+            [ -n "$a" ] || continue
+            ids=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              "https://api.cloudflare.com/client/v4/accounts/$a/d1/database" \
+              | tr ',' '\n' | grep -o '"uuid":"[^"]*"' | cut -d'"' -f4 | tr '\n' ' ')
+            case " $ids " in *" $DB_ID "*) acc="$a"; break ;; esac
+          done
+          if [ -z "$acc" ]; then echo "::error::account del database non trovato"; exit 1; fi
+
+          CLOUDFLARE_ACCOUNT_ID="$acc" npx wrangler d1 execute "$DB_NAME" --remote --file "$FILE"
+
+      - name: Righe compilate dopo l'applicazione
+        run: |
+          npx wrangler d1 execute "$DB_NAME" --remote --json \
+            --command "SELECT COUNT(*) AS diari_con_ricompense FROM adventure_details WHERE gp<>'' OR items<>'' OR fame<>''"
